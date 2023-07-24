@@ -1,10 +1,14 @@
 package main
 
 import (
+	"errors"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"github.com/caticat/go_game_server/pfyne_theme_cn"
+	"github.com/caticat/go_game_server/plog"
 )
 
 func initGUI() {
@@ -23,12 +27,12 @@ func initGUI() {
 	// 界面页签
 	guiHomeTab := initGUIHome("Home", theme.HomeIcon())
 	guiLog := initGUILog()
-	guiSetting := initGUISetting()
+	guiSettingTab := container.NewTabItemWithIcon("Setting", theme.SettingsIcon(), initGUISetting())
 	guiInfo := initGUIInfo()
 	guiTabMain = container.NewAppTabs(
 		guiHomeTab,
 		container.NewTabItemWithIcon("Log", theme.DocumentIcon(), guiLog),
-		container.NewTabItemWithIcon("Setting", theme.SettingsIcon(), guiSetting),
+		guiSettingTab,
 		container.NewTabItemWithIcon("Info", theme.InfoIcon(), guiInfo),
 	)
 	// guiTabMain.OnSelected = func(ti *container.TabItem) {
@@ -48,6 +52,13 @@ func initGUI() {
 	// 窗口尺寸
 	win.SetContent(guiTabMain)
 	win.Resize(fyne.NewSize(GUI_WINDOW_INIT_SIZE_W, GUI_WINDOW_INIT_SIZE_H))
+
+	// 初始页面
+	if err := sync(); err != nil {
+		guiTabMain.Select(guiSettingTab)
+		plog.ErrorLn(err)
+		dialog.NewError(errors.Join(ErrGitNotSync, err), win).Show()
+	}
 }
 
 func runGUI() {

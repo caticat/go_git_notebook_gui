@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path"
+	"path/filepath"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -12,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/caticat/go_game_server/phelp"
+	"github.com/caticat/go_game_server/phelp/ppath"
 	"github.com/caticat/go_game_server/plog"
 )
 
@@ -23,6 +25,7 @@ func initGUIHome(text string, icon fyne.Resource) *container.TabItem {
 		guiButSave           *widget.Button
 		guiButAdd            *widget.Button
 		guiButDel            *widget.Button
+		guiButMove           *widget.Button
 		guiPath              *widget.Tree
 		guiEditorContent     *widget.Entry
 		guiEditorPathContent *widget.Entry
@@ -70,7 +73,8 @@ func initGUIHome(text string, icon fyne.Resource) *container.TabItem {
 	initGUIButSave(&guiButSave, binEditor, &guiPath)
 	initGUIButAdd(&guiButAdd, &guiPath, funOnRefresh)
 	initGUIButDel(&guiButDel, &guiPath, funOnRefresh)
-	guiHead := container.NewGridWithColumns(2, guiSearch, container.NewHBox(guiButSearchToggle, guiButRefresh, guiButSave, guiButAdd, guiButDel))
+	initGUIButMove(&guiButMove, &guiPath, funOnRefresh)
+	guiHead := container.NewGridWithColumns(2, guiSearch, container.NewHBox(guiButSearchToggle, guiButRefresh, guiButSave, guiButAdd, guiButDel, guiButMove))
 
 	initGUIPath(&guiPath, binEditor, &guiEditorContent, &guiEditorPathContent)
 	initGuiBodyContent(&guiEditorContent, &guiBodyContent, binEditor, funOnEditorChange)
@@ -202,7 +206,8 @@ func initGUIButAdd(pGuiButAdd **widget.Button, pGuiPath **widget.Tree, funRefres
 				funRefresh()
 				(*pGuiPath).Select(filePath)
 			}, win)
-		guiDiaAdd.Resize(win.Canvas().Size())
+		canSize := win.Canvas().Size()
+		guiDiaAdd.Resize(fyne.NewSize(canSize.Width/2, 0)) // 总宽度的一般,最小高度
 		guiDiaAdd.Show()
 	})
 }
@@ -240,6 +245,76 @@ func initGUIButDel(pGuiButDel **widget.Button, pGuiPath **widget.Tree, funRefres
 	})
 }
 
+func initGUIButMove(pGuiButMove **widget.Button, pGuiPath **widget.Tree, funRefresh func()) {
+	win := getWin()
+	*pGuiButMove = widget.NewButtonWithIcon("", theme.ContentCutIcon(), func() {
+		fileNameSelect := getPathSelect()
+		files := getFiles()
+		fileName := files.FixPath(fileNameSelect)
+		conf := getCfg()
+		if fileName == path.Join(conf.Local, "") {
+			dialog.NewError(ErrMoveRootDataDirInHome, win).Show()
+			plog.ErrorLn(ErrMoveRootDataDirInHome)
+			return
+		}
+		if !files.Has(fileName) {
+			dialog.NewError(ErrMoveFileFolderNotFound, win).Show()
+			plog.ErrorLn(ErrMoveFileFolderNotFound)
+			return
+		}
+		fileNameMove, err := filepath.Rel(conf.Local, fileName)
+		if err != nil {
+			plog.ErrorLn(err)
+			return
+		}
+
+		binMoveTo := binding.NewString()
+		guiDiaMov := dialog.NewCustomConfirm(fmt.Sprintf("Move %q to", fileNameMove), "OK", "Cancel", widget.NewEntryWithData(binMoveTo), func(b bool) {
+			if !b {
+				return
+			}
+			pathTo, err := binMoveTo.Get()
+			if err != nil {
+				plog.ErrorLn(err)
+				return
+			}
+			conf := getCfg()
+			pathTo = path.Join(conf.Local, pathTo)
+			// if files.Has(pathTo) { // 重名文件校验处理
+			// 	plog.ErrorLn()
+			// 	return
+			// }
+			pathTo, err = filepath.Abs(pathTo)
+			if err != nil {
+				plog.ErrorLn(err)
+				return
+			}
+			pathFrom, err := filepath.Abs(getPathSelect())
+			if err != nil {
+				plog.ErrorLn(err)
+				return
+			}
+			pathBase, err := filepath.Abs(conf.Local)
+			if err != nil {
+				plog.ErrorLn(err)
+				return
+			}
+			if !ppath.IsSubDir(pathBase, pathTo) {
+				plog.ErrorLn(ErrMoveFilePathOutOfData)
+				return
+			}
+			if err := move(pathFrom, pathTo); err != nil {
+				plog.ErrorLn(err)
+				return
+			}
+			(*pGuiPath).UnselectAll()
+			funRefresh()
+		}, win)
+		guiDiaMov.Resize(fyne.NewSize(win.Canvas().Size().Width/2, 0))
+		guiDiaMov.Show()
+	})
+}
+
 func initGUIPath(pGuiPath **widget.Tree, binEditor binding.String, pGuiEditorContent **widget.Entry, pGuiEditorPathContent **widget.Entry) {
 	files := getFiles()
 
@@ -256,7 +331,7 @@ func initGUIPath(pGuiPath **widget.Tree, binEditor binding.String, pGuiEditorCon
 		if isDir, ok := files.IsDir(uid); isDir && ok {
 			return
 		} else {
-			sliByte, err := ioutil.ReadFile(uid)
+			sliByte, err := os.ReadFile(uid)
 			if err != nil {
 				plog.ErrorLn(err)
 				dialog.NewError(err, getWin()).Show()

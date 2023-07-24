@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -54,24 +53,48 @@ func onEditorChange(binEntry binding.String, guiButSave *widget.Button) {
 
 func saveOpenFile(fileName, fileContent string) error {
 	// 本地文件保存
-	if err := ioutil.WriteFile(fileName, []byte(fileContent), NOTEBOOK_PERM_FILE); err != nil {
+	if err := os.WriteFile(fileName, []byte(fileContent), NOTEBOOK_PERM_FILE); err != nil {
 		plog.ErrorLn(err)
 		return err
 	}
+	c := getCfg()
+	if c == nil {
+		plog.ErrorLn(ErrConfigNotFound)
+		return ErrConfigNotFound
+	}
+	g := getPGit()
+	if g == nil {
+		plog.ErrorLn(ErrGitNotSync)
+		return ErrGitNotSync
+	}
 
 	// 同步流程
-	return fileOperationProgress("save", fileName)
+	return fileOperationProgress("save", fileName, true, func() error {
+		return g.Commit(fmt.Sprintf("save %q by %s", fileName, c.AuthorName))
+	})
 }
 
 func createFile(fileName string) error {
 	// 本地文件创建
-	if err := ioutil.WriteFile(fileName, []byte(""), NOTEBOOK_PERM_FILE); err != nil {
+	if err := os.WriteFile(fileName, []byte(""), NOTEBOOK_PERM_FILE); err != nil {
 		plog.Error(err)
 		return err
 	}
+	c := getCfg()
+	if c == nil {
+		plog.ErrorLn(ErrConfigNotFound)
+		return ErrConfigNotFound
+	}
+	g := getPGit()
+	if g == nil {
+		plog.ErrorLn(ErrGitNotSync)
+		return ErrGitNotSync
+	}
 
 	// 同步流程
-	return fileOperationProgress("add file", fileName)
+	return fileOperationProgress("add file", fileName, true, func() error {
+		return g.Commit(fmt.Sprintf("add file %q by %s", fileName, c.AuthorName))
+	})
 }
 
 func createFolder(fileName string) error {
@@ -80,9 +103,21 @@ func createFolder(fileName string) error {
 		plog.Error(err)
 		return err
 	}
+	c := getCfg()
+	if c == nil {
+		plog.ErrorLn(ErrConfigNotFound)
+		return ErrConfigNotFound
+	}
+	g := getPGit()
+	if g == nil {
+		plog.ErrorLn(ErrGitNotSync)
+		return ErrGitNotSync
+	}
 
 	// 同步流程
-	return fileOperationProgress("add folder", fileName)
+	return fileOperationProgress("add folder", fileName, true, func() error {
+		return g.Commit(fmt.Sprintf("add folder %q by %s", fileName, c.AuthorName))
+	})
 }
 
 func deleteFileFolder(fileName string) error {
@@ -101,12 +136,102 @@ func deleteFiles(files map[string]bool) error {
 		}
 		fileName += f + "\n"
 	}
+	c := getCfg()
+	if c == nil {
+		plog.ErrorLn(ErrConfigNotFound)
+		return ErrConfigNotFound
+	}
+	g := getPGit()
+	if g == nil {
+		plog.ErrorLn(ErrGitNotSync)
+		return ErrGitNotSync
+	}
 
 	// 同步流程
-	return fileOperationProgress("delete file/folder", fileName)
+	return fileOperationProgress("delete file/folder", fileName, true, func() error {
+		return g.Commit(fmt.Sprintf("delete file/folder %q by %s", fileName, c.AuthorName))
+	})
 }
 
-func fileOperationProgress(strOperation, fileName string) error {
+func move(pathFrom, pathTo string) error {
+	return fileOperationProgress(fmt.Sprintf("move %q %q", pathFrom, pathTo), pathFrom, true, func() error {
+		phelp.Mv(pathFrom, pathTo, phelp.PBinFlag_Recursive|phelp.PBinFlag_Force)
+		return nil
+	})
+}
+
+func forceUpdate() error {
+	c := getCfg()
+	if c == nil {
+		plog.ErrorLn(ErrConfigNotFound)
+		return ErrConfigNotFound
+	}
+	g := getPGit()
+	if g == nil {
+		plog.ErrorLn(ErrGitNotSync)
+		return ErrGitNotSync
+	}
+
+	// 同步流程
+	return fileOperationProgress("force update", c.Local, false, func() error {
+		return g.ResetToRemote()
+	})
+}
+
+func forcePush() error {
+	c := getCfg()
+	if c == nil {
+		plog.ErrorLn(ErrConfigNotFound)
+		return ErrConfigNotFound
+	}
+	g := getPGit()
+	if g == nil {
+		plog.ErrorLn(ErrGitNotSync)
+		return ErrGitNotSync
+	}
+
+	// 同步流程
+	return fileOperationProgress("force push", c.Repository, false, func() error {
+		return g.PushForce()
+	})
+}
+
+func export(fileTo string) error {
+	c := getCfg()
+	if c == nil {
+		plog.ErrorLn(ErrConfigNotFound)
+		return ErrConfigNotFound
+	}
+
+	// 同步流程
+	return fileOperationProgress("export notebook", fileTo, false, func() error {
+		_, err := phelp.Cp(c.Local, fileTo, phelp.PBinFlag_Recursive|phelp.PBinFlag_Force)
+		return err
+	})
+}
+
+func importFrom(fileFrom string) error {
+	c := getCfg()
+	if c == nil {
+		plog.ErrorLn(ErrConfigNotFound)
+		return ErrConfigNotFound
+	}
+	g := getPGit()
+	if g == nil {
+		plog.ErrorLn(ErrGitNotSync)
+		return ErrGitNotSync
+	}
+
+	// 同步流程
+	return fileOperationProgress("import notebook", fileFrom, false, func() error {
+		if _, err := phelp.Cp(fileFrom, c.Local, phelp.PBinFlag_Recursive|phelp.PBinFlag_Force); err != nil {
+			return err
+		}
+		return g.Commit(fmt.Sprintf("import notebook from %q by %s", fileFrom, c.AuthorName))
+	})
+}
+
+func fileOperationProgress(strOperation, fileName string, autoClose bool, funOperation func() error) error {
 	// 弹窗
 	guiProgress := widget.NewProgressBarInfinite()
 	guiDiaProgress := dialog.NewCustom(fmt.Sprintf("%s %q", strOperation, fileName), strOperation, guiProgress, getWin())
@@ -124,7 +249,7 @@ func fileOperationProgress(strOperation, fileName string) error {
 		plog.ErrorLn(ErrGitNotSync)
 		return ErrGitNotSync
 	}
-	if err := g.Commit(fmt.Sprintf("%s %q by %s", strOperation, fileName, c.AuthorName)); err != nil {
+	if err := funOperation(); err != nil {
 		plog.ErrorLn(err)
 		return err
 	}
@@ -141,8 +266,10 @@ func fileOperationProgress(strOperation, fileName string) error {
 	// 标记完成
 	guiProgress.Stop()
 	guiDiaProgress.SetDismissText("done")
-	time.Sleep(time.Millisecond * GUI_DIALOG_AUTOCLOSE_WAIT_TIME)
-	guiDiaProgress.Hide()
+	if autoClose {
+		time.Sleep(time.Millisecond * GUI_DIALOG_AUTOCLOSE_WAIT_TIME)
+		guiDiaProgress.Hide()
+	}
 
 	return nil
 }

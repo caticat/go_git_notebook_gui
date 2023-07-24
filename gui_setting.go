@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"path"
 
 	"fyne.io/fyne/v2"
@@ -109,7 +110,9 @@ func initGUISettingBasic() *widget.Form {
 		if err != nil {
 			plog.ErrorLn(err)
 		}
+		dialog.NewInformation("Setting Config", "Update Config Done!", getWin()).Show()
 	}
+	guiForm.Refresh()
 
 	return guiForm
 }
@@ -126,10 +129,30 @@ func initGUISettingAdvance() fyne.CanvasObject {
 
 	return container.NewVBox(
 		widget.NewButtonWithIcon("Force Update(drop local modify data)", theme.DownloadIcon(), func() {
-			// TODO 功能待制作
+			dialog.NewConfirm("Force Update", "drop all local change?", func(b bool) {
+				if !b {
+					return
+				}
+				if err := forceUpdate(); err != nil {
+					plog.ErrorLn(err)
+					return
+				}
+				getFunRefresh()()
+				plog.InfoLn("Force Update Done")
+			}, win).Show()
 		}),
 		widget.NewButtonWithIcon("Force Push(use local data)", theme.UploadIcon(), func() {
-			// TODO 功能待制作
+			dialog.NewConfirm("Force Push", "force push local data to remote?", func(b bool) {
+				if !b {
+					return
+				}
+				if err := forcePush(); err != nil {
+					plog.ErrorLn(err)
+					return
+				}
+				getFunRefresh()()
+				plog.InfoLn("Force Push Done")
+			}, win).Show()
 		}),
 		widget.NewButtonWithIcon("Delete Data All", theme.DeleteIcon(), func() {
 			guiDiaDel := dialog.NewConfirm("Delete", "delete all data(sync to repo)?", func(b bool) {
@@ -151,14 +174,83 @@ func initGUISettingAdvance() fyne.CanvasObject {
 					return
 				}
 				getFunRefresh()()
+				plog.InfoLn("Delete Data All Done")
 			}, win)
 			guiDiaDel.Show()
 		}),
 		widget.NewButtonWithIcon("Export Notebook", theme.LogoutIcon(), func() {
-			// TODO 功能待制作
+			diaFolder := dialog.NewFolderOpen(func(lu fyne.ListableURI, err error) {
+				if lu == nil {
+					return
+				}
+				fileTo := lu.Path()
+				dialog.NewConfirm("Export Notebook", fmt.Sprintf("export notebook to:%q", fileTo), func(b bool) {
+					if !b {
+						return
+					}
+					if err := export(fileTo); err != nil {
+						plog.ErrorLn(err)
+						return
+					}
+					plog.InfoF("Export all notebook to %q done\n", fileTo)
+				}, win).Show()
+			}, win)
+			diaFolder.Resize(win.Canvas().Size())
+			diaFolder.Show()
 		}),
 		widget.NewButtonWithIcon("Import Notebook", theme.LoginIcon(), func() {
-			// TODO 功能待制作
+			binFileType := binding.NewString()
+			guiRadio := widget.NewRadioGroup([]string{"file", "folder"}, func(s string) { binFileType.Set(s) })
+			guiRadio.SetSelected("file")
+			dialog.NewCustomConfirm("Import Notebook", "OK", "Cancel", guiRadio, func(b bool) {
+				if !b {
+					return
+				}
+				fileType, err := binFileType.Get()
+				if err != nil {
+					plog.ErrorLn(err)
+					return
+				}
+				if fileType == "file" {
+					diaFile := dialog.NewFileOpen(func(uc fyne.URIReadCloser, err error) {
+						if uc == nil {
+							return
+						}
+						defer uc.Close()
+						fileFrom := uc.URI().Path()
+						if err := importFrom(fileFrom); err != nil {
+							plog.ErrorLn(err)
+							return
+						}
+						sync()
+						getFunRefresh()()
+						plog.InfoF("Import notebook from %q done\n", fileFrom)
+					}, win)
+					diaFile.Resize(win.Canvas().Size())
+					diaFile.Show()
+				} else {
+					diaFolder := dialog.NewFolderOpen(func(lu fyne.ListableURI, err error) {
+						if lu == nil {
+							return
+						}
+						fileFrom := lu.Path()
+						dialog.NewConfirm("Import Notebook", fmt.Sprintf("import notebook from:%q", fileFrom), func(b bool) {
+							if !b {
+								return
+							}
+							if err := importFrom(fileFrom); err != nil {
+								plog.ErrorLn(err)
+								return
+							}
+							sync()
+							getFunRefresh()()
+							plog.InfoF("Import notebook from %q done\n", fileFrom)
+						}, win).Show()
+					}, win)
+					diaFolder.Resize(win.Canvas().Size())
+					diaFolder.Show()
+				}
+			}, win).Show()
 		}),
 	)
 }
