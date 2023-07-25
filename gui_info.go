@@ -1,9 +1,11 @@
 package main
 
 import (
+	"image/color"
 	"net/url"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 )
@@ -20,6 +22,8 @@ func initGUIInfo() fyne.CanvasObject {
 				widget.NewFormItem("repository", urlLink),
 				widget.NewFormItem("version", widget.NewLabel(APP_VER)),
 			),
+			canvas.NewLine(color.Black),
+			widget.NewRichTextFromMarkdown(GUI_INFO_README),
 		),
 	)
 }

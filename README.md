@@ -4,8 +4,7 @@ a git based notebook gui implement by go
 
 ## 待制作
 
-- 预览界面
-	- markdown支持
+- 搜索
 
 ## 已实现
 
@@ -18,15 +17,12 @@ a git based notebook gui implement by go
 - 移动
 	- 文件
 	- 文件夹
+- 导入
+- 导出
+- 预览界面
+	- markdown支持
 - 全部删除并推送
 - 强制推送
 - 强制拉取
 - 启动时无法连接git时跳转到配置页签
 - 首次打开编辑窗口处理
-- 导入
-- 导出
-
-## 待处理
-
-- `Fyne error:  Getting favorite locations`
-- `Cause: uri is not listable`

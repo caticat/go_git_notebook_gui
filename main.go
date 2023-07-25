@@ -22,8 +22,8 @@ func main() {
 	initGUI()
 
 	// 日志额外设置
-	// plog.SetOutput(NewPLogWriter()) // 配置读取后才将日志输出只向GUI界面
-	// plog.SetShortFile()             // GUI中采用短文件名记录日志
+	plog.SetOutput(NewPLogWriter()) // 配置读取后才将日志输出只向GUI界面
+	plog.SetShortFile()             // GUI中采用短文件名记录日志
 
 	// 运行
 	debug()

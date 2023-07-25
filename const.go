@@ -17,15 +17,57 @@ const (
 	"password" : "",
 	"authorname" : "",
 	"authoremail" : "",
-	"loglevel" : 1
+	"loglevel" : 1,
+	"homelayout" : 7
 }
 `
 
 	// gui
-	GUI_WINDOW_INIT_SIZE_W         = 1000 // 窗口初始大小W
-	GUI_WINDOW_INIT_SIZE_H         = 700  // 窗口初始大小H
-	GUI_HOME_OFFSET                = 0.3  // 初始主界面分隔比率
-	GUI_DIALOG_AUTOCLOSE_WAIT_TIME = 300  // 弹窗自动关闭事件 毫秒
+	GUI_WINDOW_INIT_SIZE_W         = 1000   // 窗口初始大小W
+	GUI_WINDOW_INIT_SIZE_H         = 700    // 窗口初始大小H
+	GUI_HOME_OFFSET                = 0.3    // 初始主界面分隔比率
+	GUI_DIALOG_AUTOCLOSE_WAIT_TIME = 300    // 弹窗自动关闭事件 毫秒
+	GUI_HOME_TOGGLE_LEFT           = 1 << 0 // 主界面显示标记 目录树
+	GUI_HOME_TOGGLE_MIDDLE         = 1 << 1 // 主界面显示标记 编辑
+	GUI_HOME_TOGGLE_RIGHT          = 1 << 2 // 主界面显示标记 预览
+	GUI_INFO_README                = `# 说明
+
+基础云笔记功能
+
+## 功能
+
+- 基础编辑
+- Markdown
+- github/gitee同步
+- 强制推送
+- 强制拉取
+- 导入
+- 导出
+
+## 使用说明
+
+1. 配置仓库地址(数据存储)
+1. 配置认证信息(提交认证)
+	- 账号密码方式
+		- 账号
+		- 密码
+	- token方式
+		- 账号不用填写
+		- 密码:填写token的值
+1. 配置作者信息(git日志用)
+	- 作者名
+	- 作者邮箱
+
+## 问题解决
+
+- 如果出现同步失败的情况
+	- 可能的原因
+		- 本地更新后其他人提交到仓库了文件
+	- 解决方法
+		- 强制拉取(会丢弃本地变更)
+		- 强制推送(会丢失远程变更)
+
+` // 信息界面说明文字
 
 	// plog
 	PLOG_MAX_SIZE = 1 << 20 // 日志数据量

@@ -19,26 +19,29 @@ import (
 
 func initGUIHome(text string, icon fyne.Resource) *container.TabItem {
 	var (
-		guiSearch            *widget.SelectEntry
-		guiButSearchToggle   *widget.Button
-		guiButRefresh        *widget.Button
-		guiButSave           *widget.Button
-		guiButAdd            *widget.Button
-		guiButDel            *widget.Button
-		guiButMove           *widget.Button
-		guiPath              *widget.Tree
-		guiEditorContent     *widget.Entry
-		guiEditorPathContent *widget.Entry
-		guiBodyContent       *fyne.Container
-		guiBodyPathContent   *container.Split
-		binEditor            = binding.NewString()
+		funBodyShow        func()
+		guiSearch          *widget.SelectEntry
+		guiButToggleLeft   *widget.Button
+		guiButToggleMiddle *widget.Button
+		guiButToggleRight  *widget.Button
+		guiButRefresh      *widget.Button
+		guiButSave         *widget.Button
+		guiButAdd          *widget.Button
+		guiButDel          *widget.Button
+		guiButMove         *widget.Button
+		guiPath            *widget.Tree
+		guiEditorContent   *widget.Entry
+		guiPreview         *widget.RichText
+		guiBody            *fyne.Container
+		binEditor          = binding.NewString()
+		guiLabLogLast      *widget.Label // 身体 日志最后一行
 	)
 
 	funOnEditorChange := func(s string) {
 		if err := binEditor.Set(s); err != nil {
 			plog.ErrorLn(err)
 		}
-		onEditorChange(binEditor, guiButSave)
+		onEditorChange(binEditor, guiButSave, guiPreview)
 	}
 	funOnRefresh := func() {
 		if err := sync(); err != nil {
@@ -68,20 +71,21 @@ func initGUIHome(text string, icon fyne.Resource) *container.TabItem {
 	}
 	setFunRefresh(funOnRefresh)
 	initGUISearch(&guiSearch, &guiPath)
-	initGUIButSearchToggle(&guiButSearchToggle, &guiBodyContent, &guiBodyPathContent)
+	initGUIButToggle(&funBodyShow, &guiButToggleLeft, &guiButToggleMiddle, &guiButToggleRight, &guiBody, &guiPath, &guiEditorContent, &guiPreview)
 	initGUIButRefresh(&guiButRefresh, funOnRefresh)
 	initGUIButSave(&guiButSave, binEditor, &guiPath)
 	initGUIButAdd(&guiButAdd, &guiPath, funOnRefresh)
 	initGUIButDel(&guiButDel, &guiPath, funOnRefresh)
 	initGUIButMove(&guiButMove, &guiPath, funOnRefresh)
-	guiHead := container.NewGridWithColumns(2, guiSearch, container.NewHBox(guiButSearchToggle, guiButRefresh, guiButSave, guiButAdd, guiButDel, guiButMove))
+	guiHead := container.NewGridWithColumns(2, guiSearch, container.NewHBox(guiButToggleLeft, guiButToggleMiddle, guiButToggleRight, guiButRefresh, guiButSave, guiButAdd, guiButDel, guiButMove))
 
-	initGUIPath(&guiPath, binEditor, &guiEditorContent, &guiEditorPathContent)
-	initGuiBodyContent(&guiEditorContent, &guiBodyContent, binEditor, funOnEditorChange)
-	initGuiBodyPathContent(&guiEditorPathContent, &guiBodyPathContent, binEditor, funOnEditorChange, &guiPath)
-	guiBody := container.NewMax(guiBodyContent, guiBodyPathContent)
+	initGUIPath(&guiPath, binEditor, &guiEditorContent)
+	initGuiBodyContent(&guiEditorContent, &guiPreview, binEditor, funOnEditorChange)
+	guiBody = container.NewMax()
+	funBodyShow()
 
-	guiMain := container.NewBorder(guiHead, nil, nil, nil, guiBody)
+	guiLabLogLast = widget.NewLabelWithData(getLogLast())
+	guiMain := container.NewBorder(guiHead, guiLabLogLast, nil, nil, guiBody)
 
 	guiHome := container.NewTabItemWithIcon(text, icon, guiMain)
 
@@ -108,18 +112,78 @@ func initGUISearch(pGuiSearch **widget.SelectEntry, pGuiPath **widget.Tree) {
 	}
 }
 
-func initGUIButSearchToggle(pGuiButSearchToggle **widget.Button, pGuiBody1 **fyne.Container, pGuiBody2 **container.Split) {
-	*pGuiButSearchToggle = widget.NewButtonWithIcon("", theme.ListIcon(), func() {
-		guiBody1 := *pGuiBody1
-		guiBody2 := *pGuiBody2
-		if guiBody1.Visible() {
-			guiBody1.Hide()
-			guiBody2.Show()
+func initGUIButToggle(pFunBodyShow *func(),
+	pGuiButToggleLeft **widget.Button,
+	pGuiButToggleMiddle **widget.Button,
+	pGuiButToggleRight **widget.Button,
+	pGuiBody **fyne.Container,
+	pGuiPath **widget.Tree,
+	pGuiEditorContent **widget.Entry,
+	pGuiPreview **widget.RichText) {
+	conf := getCfg()
+	bodyshow := conf.getHomeLayout()
+	*pGuiButToggleLeft = widget.NewButtonWithIcon("", theme.NavigateNextIcon(), func() {
+		if (bodyshow & GUI_HOME_TOGGLE_LEFT) > 0 {
+			bodyshow = bodyshow & ^GUI_HOME_TOGGLE_LEFT
 		} else {
-			guiBody1.Show()
-			guiBody2.Hide()
+			bodyshow = bodyshow | GUI_HOME_TOGGLE_LEFT
 		}
+		(*pFunBodyShow)()
 	})
+	*pGuiButToggleMiddle = widget.NewButtonWithIcon("", theme.MoveUpIcon(), func() {
+		if (bodyshow & GUI_HOME_TOGGLE_MIDDLE) > 0 {
+			bodyshow = bodyshow & ^GUI_HOME_TOGGLE_MIDDLE
+		} else {
+			bodyshow = bodyshow | GUI_HOME_TOGGLE_MIDDLE
+		}
+		(*pFunBodyShow)()
+	})
+	*pGuiButToggleRight = widget.NewButtonWithIcon("", theme.NavigateBackIcon(), func() {
+		if (bodyshow & GUI_HOME_TOGGLE_RIGHT) > 0 {
+			bodyshow = bodyshow & ^GUI_HOME_TOGGLE_RIGHT
+		} else {
+			bodyshow = bodyshow | GUI_HOME_TOGGLE_RIGHT
+		}
+		(*pFunBodyShow)()
+	})
+
+	(*pFunBodyShow) = func() {
+		if bodyshow == 0 {
+			bodyshow = GUI_HOME_TOGGLE_MIDDLE
+		}
+		body := *pGuiBody
+		body.RemoveAll()
+		sliWid := make([]fyne.CanvasObject, 0)
+		if bodyshow&GUI_HOME_TOGGLE_MIDDLE > 0 {
+			sliWid = append(sliWid, container.NewScroll(*pGuiEditorContent))
+			(*pGuiButToggleMiddle).SetIcon(theme.MoveUpIcon())
+		} else {
+			(*pGuiButToggleMiddle).SetIcon(theme.MoveDownIcon())
+		}
+		if bodyshow&GUI_HOME_TOGGLE_RIGHT > 0 {
+			sliWid = append(sliWid, container.NewScroll(*pGuiPreview))
+			(*pGuiButToggleRight).SetIcon(theme.NavigateNextIcon())
+		} else {
+			(*pGuiButToggleRight).SetIcon(theme.NavigateBackIcon())
+		}
+		lenWid := len(sliWid)
+		if bodyshow&GUI_HOME_TOGGLE_LEFT > 0 {
+			if lenWid > 0 {
+				guiSplit := container.NewHSplit(*pGuiPath, container.NewAdaptiveGrid(lenWid, sliWid...))
+				guiSplit.SetOffset(GUI_HOME_OFFSET)
+				body.Add(guiSplit)
+			} else {
+				body.Add(*pGuiPath)
+			}
+			(*pGuiButToggleLeft).SetIcon(theme.NavigateBackIcon())
+		} else {
+			body.Add(container.NewAdaptiveGrid(lenWid, sliWid...))
+			(*pGuiButToggleLeft).SetIcon(theme.NavigateNextIcon())
+		}
+
+		conf.setHomeLayout(bodyshow)
+		conf.save()
+	}
 }
 
 func initGUIButRefresh(pGuiButRefresh **widget.Button, funRefresh func()) {
@@ -315,7 +379,7 @@ func initGUIButMove(pGuiButMove **widget.Button, pGuiPath **widget.Tree, funRefr
 	})
 }
 
-func initGUIPath(pGuiPath **widget.Tree, binEditor binding.String, pGuiEditorContent **widget.Entry, pGuiEditorPathContent **widget.Entry) {
+func initGUIPath(pGuiPath **widget.Tree, binEditor binding.String, pGuiEditorContent **widget.Entry) {
 	files := getFiles()
 
 	(*pGuiPath) = widget.NewTree(
@@ -346,9 +410,6 @@ func initGUIPath(pGuiPath **widget.Tree, binEditor binding.String, pGuiEditorCon
 			if (*pGuiEditorContent).Disabled() {
 				(*pGuiEditorContent).Enable()
 			}
-			if (*pGuiEditorPathContent).Disabled() {
-				(*pGuiEditorPathContent).Enable()
-			}
 		}
 
 		for p := uid; (p != phelp.STR_EMPTY) && (p != phelp.PATH_CURRENT); p = path.Dir(p) {
@@ -357,24 +418,23 @@ func initGUIPath(pGuiPath **widget.Tree, binEditor binding.String, pGuiEditorCon
 	}
 }
 
-func initGuiBodyContent(pGuiEditorContent **widget.Entry, pGuiBodyContent **fyne.Container, binEditor binding.String, funOnEditorChange func(string)) {
+func initGuiBodyContent(pGuiEditorContent **widget.Entry, pGuiPreview **widget.RichText, binEditor binding.String, funOnEditorChange func(string)) {
 	*pGuiEditorContent = widget.NewMultiLineEntry()
 	guiEditorContent := *pGuiEditorContent
 	guiEditorContent.Bind(binEditor)
 	guiEditorContent.OnChanged = funOnEditorChange
 	guiEditorContent.Disable()
-	*pGuiBodyContent = container.NewMax(guiEditorContent)
-	guiBodyContent := *pGuiBodyContent
-	guiBodyContent.Hide()
+
+	*pGuiPreview = widget.NewRichText()
 }
 
-func initGuiBodyPathContent(pGuiEditorPathContent **widget.Entry, pGuiBodyPathContent **container.Split, binEditor binding.String, funOnEditorChange func(string), pGuiPath **widget.Tree) {
-	*pGuiEditorPathContent = widget.NewMultiLineEntry()
-	guiEditorPathContent := *pGuiEditorPathContent
-	guiEditorPathContent.Bind(binEditor)
-	guiEditorPathContent.OnChanged = funOnEditorChange
-	guiEditorPathContent.Disable()
-	*pGuiBodyPathContent = container.NewHSplit(*pGuiPath, guiEditorPathContent)
-	guiBodyPathContent := *pGuiBodyPathContent
-	guiBodyPathContent.SetOffset(GUI_HOME_OFFSET)
-}
+// func initGuiBodyPathContent(pGuiEditorPathContent **widget.Entry, pGuiBodyPathContent **container.Split, binEditor binding.String, funOnEditorChange func(string), pGuiPath **widget.Tree) {
+// 	*pGuiEditorPathContent = widget.NewMultiLineEntry()
+// 	guiEditorPathContent := *pGuiEditorPathContent
+// 	guiEditorPathContent.Bind(binEditor)
+// 	guiEditorPathContent.OnChanged = funOnEditorChange
+// 	guiEditorPathContent.Disable()
+// 	*pGuiBodyPathContent = container.NewHSplit(*pGuiPath, guiEditorPathContent)
+// 	guiBodyPathContent := *pGuiBodyPathContent
+// 	guiBodyPathContent.SetOffset(GUI_HOME_OFFSET)
+// }

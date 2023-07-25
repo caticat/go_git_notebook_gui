@@ -29,16 +29,18 @@ func sync() error {
 }
 
 // 编辑器内容变更 更新保存按钮状态
-func onEditorChange(binEntry binding.String, guiButSave *widget.Button) {
+func onEditorChange(binEntry binding.String, guiButSave *widget.Button, guiPreview *widget.RichText) {
 	contentNew, err := binEntry.Get()
 	if err != nil {
 		plog.ErrorLn(err)
 		return
 	}
 
+	if guiPreview.Visible() {
+		guiPreview.ParseMarkdown(contentNew)
+	}
+
 	contentOri := getOpenFileContent()
-	// plog.InfoLn("change ori:", contentOri)
-	// plog.InfoLn("change new:", contentNew)
 	if contentOri == contentNew {
 		if !guiButSave.Disabled() {
 			guiButSave.Disable()
@@ -116,7 +118,10 @@ func createFolder(fileName string) error {
 
 	// 同步流程
 	return fileOperationProgress("add folder", fileName, true, func() error {
-		return g.Commit(fmt.Sprintf("add folder %q by %s", fileName, c.AuthorName))
+		plog.InfoF("add folder %q by %s\n", fileName, c.AuthorName)
+		// 创建文件夹无需提交仓库,空文件夹也提交不上去
+		// return g.Commit(fmt.Sprintf("add folder %q by %s", fileName, c.AuthorName))
+		return nil
 	})
 }
 
@@ -192,6 +197,9 @@ func forcePush() error {
 
 	// 同步流程
 	return fileOperationProgress("force push", c.Repository, false, func() error {
+		if err := g.Commit(fmt.Sprintf("add all to notebook by %s", c.AuthorName)); err != nil {
+			return err
+		}
 		return g.PushForce()
 	})
 }

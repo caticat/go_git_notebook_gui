@@ -12,6 +12,7 @@ var (
 	g_cfg             = newPNoteBookCfg()
 	g_pgit            *pgit.PGit
 	g_logData         = binding.NewString()
+	g_logLast         = binding.NewString()
 	g_files           *PFyneTreePath
 	g_pathSelect      string
 	g_openFileName    string
@@ -27,6 +28,7 @@ func getCfg() *PNoteBookCfg             { return g_cfg }
 func getPGit() *pgit.PGit               { return g_pgit }
 func setPGit(p *pgit.PGit)              { g_pgit = p }
 func getLogData() binding.String        { return g_logData }
+func getLogLast() binding.String        { return g_logLast }
 func getFiles() *PFyneTreePath          { return g_files }
 func setFiles(files *PFyneTreePath)     { g_files = files }
 func getPathSelect() string             { return g_pathSelect }

@@ -15,6 +15,7 @@ type PNoteBookCfg struct {
 	AuthorName  string `json:"authorname"`  // 提交用户名
 	AuthorEMail string `json:"authoremail"` // 提交用户邮箱
 	LogLevel    int    `json:"loglevel"`    // 日志等级
+	HomeLayout  int    `json:"homelayout"`  // 界面布局
 }
 
 func newPNoteBookCfg() *PNoteBookCfg {
@@ -61,7 +62,6 @@ func (p *PNoteBookCfg) save() error {
 	return nil
 }
 
-func (p *PNoteBookCfg) getLogLevel() int { return p.LogLevel }
-func (p *PNoteBookCfg) setLogLevel(logLevel int) {
-	p.LogLevel = logLevel
-}
+func (p *PNoteBookCfg) setLogLevel(logLevel int)     { p.LogLevel = logLevel }
+func (p *PNoteBookCfg) getHomeLayout() int           { return p.HomeLayout }
+func (p *PNoteBookCfg) setHomeLayout(homeLayout int) { p.HomeLayout = homeLayout }
