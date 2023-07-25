@@ -4,8 +4,6 @@ a git based notebook gui implement by go
 
 ## 待制作
 
-- 搜索
-
 ## 已实现
 
 - 新建
@@ -21,6 +19,7 @@ a git based notebook gui implement by go
 - 导出
 - 预览界面
 	- markdown支持
+- 搜索
 - 全部删除并推送
 - 强制推送
 - 强制拉取

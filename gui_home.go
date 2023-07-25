@@ -95,11 +95,15 @@ func initGUIHome(text string, icon fyne.Resource) *container.TabItem {
 func initGUISearch(pGuiSearch **widget.SelectEntry, pGuiPath **widget.Tree) {
 	files := getFiles()
 
-	(*pGuiSearch) = widget.NewSelectEntry(files.KeysAll())
+	(*pGuiSearch) = widget.NewSelectEntry(files.KeysAll(""))
 
 	guiSearch := (*pGuiSearch)
+	guiSearch.SetPlaceHolder(GUI_HOME_SEARCH_PLACEHOLDER)
 	guiSearch.OnChanged = func(s string) {
-		if !files.Has(s) {
+		if (s == "") || (!files.Has(s)) {
+			guiSearch.SetOptions(files.KeysAll(s))
+			// guiSearch.ActionItem.(*widget.Button).OnTapped() // 打开选择框,会丢失输入焦点
+			// getWin().Canvas().Focus(&guiSearch.Entry) // 强制选择输入框做焦点,无效...没有找对canvas
 			return
 		}
 		guiSearch.OnSubmitted(s)
