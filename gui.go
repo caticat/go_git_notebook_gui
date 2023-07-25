@@ -27,26 +27,24 @@ func initGUI() {
 	// 界面页签
 	guiHomeTab := initGUIHome("Home", theme.HomeIcon())
 	guiLog := initGUILog()
+	guiLogTab := container.NewTabItemWithIcon("Log", theme.DocumentIcon(), guiLog)
 	guiSettingTab := container.NewTabItemWithIcon("Setting", theme.SettingsIcon(), initGUISetting())
 	guiInfo := initGUIInfo()
 	guiTabMain = container.NewAppTabs(
 		guiHomeTab,
-		container.NewTabItemWithIcon("Log", theme.DocumentIcon(), guiLog),
+		guiLogTab,
 		guiSettingTab,
 		container.NewTabItemWithIcon("Info", theme.InfoIcon(), guiInfo),
 	)
-	// guiTabMain.OnSelected = func(ti *container.TabItem) {
-	// 	plog.InfoLn(ti.Text)
-	// 	// iconName := ti.Icon.Name()
-	// 	// if iconName == theme.InfoIcon().Name() { // 更新Info界面的数据
-	// 	// 	infoData.Set(phelp.ToJsonIndent(getConf()))
-	// 	// }
-	// 	// if iconName == theme.DocumentIcon().Name() { // 日志界面隐藏逻辑,减少界面刷新
-	// 	// 	guiLog.Show()
-	// 	// } else {
-	// 	// 	guiLog.Hide()
-	// 	// }
-	// }
+	guiTabMain.OnSelected = func(ti *container.TabItem) {
+		// plog.InfoLn(ti.Text)
+		if ti == guiLogTab { // 日志界面隐藏逻辑,减少界面刷新
+			guiLog.Show()
+		} else {
+			guiLog.Hide()
+		}
+	}
+	guiLog.Hide()
 	guiTabMain.SetTabLocation(container.TabLocationLeading)
 
 	// 窗口尺寸

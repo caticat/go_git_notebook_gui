@@ -26,7 +26,6 @@ func main() {
 	plog.SetShortFile()             // GUI中采用短文件名记录日志
 
 	// 运行
-	debug()
 	runGUI()
 
 	// 关闭
@@ -38,10 +37,4 @@ func close() {
 	if !app.Driver().Device().IsMobile() {
 		app.Quit()
 	}
-}
-
-func debug() {
-	// refresh()
-
-	// os.Exit(0)
 }

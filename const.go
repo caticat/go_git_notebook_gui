@@ -38,6 +38,7 @@ const (
 ## 功能
 
 - 基础编辑
+	- "Ctrl + S",保存
 - Markdown
 - github/gitee同步
 - 强制推送
@@ -53,7 +54,7 @@ const (
 		- 账号
 		- 密码
 	- token方式
-		- 账号不用填写
+		- 账号
 		- 密码:填写token的值
 1. 配置作者信息(git日志用)
 	- 作者名

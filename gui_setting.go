@@ -111,6 +111,7 @@ func initGUISettingBasic() *widget.Form {
 			plog.ErrorLn(err)
 		}
 		dialog.NewInformation("Setting Config", "Update Config Done!", getWin()).Show()
+		plog.InfoLn("update config done")
 	}
 	guiForm.Refresh()
 

@@ -30,7 +30,7 @@ func initGUIHome(text string, icon fyne.Resource) *container.TabItem {
 		guiButDel          *widget.Button
 		guiButMove         *widget.Button
 		guiPath            *widget.Tree
-		guiEditorContent   *widget.Entry
+		guiEditorContent   *PCSEntry
 		guiPreview         *widget.RichText
 		guiBody            *fyne.Container
 		binEditor          = binding.NewString()
@@ -68,6 +68,7 @@ func initGUIHome(text string, icon fyne.Resource) *container.TabItem {
 				return
 			}
 		}
+		plog.InfoLn("refresh done")
 	}
 	setFunRefresh(funOnRefresh)
 	initGUISearch(&guiSearch, &guiPath)
@@ -80,7 +81,7 @@ func initGUIHome(text string, icon fyne.Resource) *container.TabItem {
 	guiHead := container.NewGridWithColumns(2, guiSearch, container.NewHBox(guiButToggleLeft, guiButToggleMiddle, guiButToggleRight, guiButRefresh, guiButSave, guiButAdd, guiButDel, guiButMove))
 
 	initGUIPath(&guiPath, binEditor, &guiEditorContent)
-	initGuiBodyContent(&guiEditorContent, &guiPreview, binEditor, funOnEditorChange)
+	initGuiBodyContent(&guiEditorContent, &guiPreview, binEditor, funOnEditorChange, &guiButSave)
 	guiBody = container.NewMax()
 	funBodyShow()
 
@@ -122,7 +123,7 @@ func initGUIButToggle(pFunBodyShow *func(),
 	pGuiButToggleRight **widget.Button,
 	pGuiBody **fyne.Container,
 	pGuiPath **widget.Tree,
-	pGuiEditorContent **widget.Entry,
+	pGuiEditorContent **PCSEntry,
 	pGuiPreview **widget.RichText) {
 	conf := getCfg()
 	bodyshow := conf.getHomeLayout()
@@ -217,6 +218,8 @@ func initGUIButSave(pGuiButSave **widget.Button, binEditor binding.String, pGuiP
 			return
 		}
 		(*pGuiButSave).Disable()
+
+		plog.InfoF("save %q done\n", fileName)
 	})
 
 	guiButSave := *pGuiButSave
@@ -273,6 +276,8 @@ func initGUIButAdd(pGuiButAdd **widget.Button, pGuiPath **widget.Tree, funRefres
 				}
 				funRefresh()
 				(*pGuiPath).Select(filePath)
+
+				plog.InfoF("add %s %s done\n", fileType, filePath)
 			}, win)
 		canSize := win.Canvas().Size()
 		guiDiaAdd.Resize(fyne.NewSize(canSize.Width/2, 0)) // 总宽度的一般,最小高度
@@ -307,6 +312,7 @@ func initGUIButDel(pGuiButDel **widget.Button, pGuiPath **widget.Tree, funRefres
 			}
 			(*pGuiPath).UnselectAll()
 			funRefresh()
+			plog.InfoLn("del " + fileName + " done")
 		}, win)
 		// guiDiaDel.Resize(win.Canvas().Size())
 		guiDiaDel.Show()
@@ -377,13 +383,15 @@ func initGUIButMove(pGuiButMove **widget.Button, pGuiPath **widget.Tree, funRefr
 			}
 			(*pGuiPath).UnselectAll()
 			funRefresh()
+
+			plog.InfoF("move %q %q done\n", pathFrom, pathTo)
 		}, win)
 		guiDiaMov.Resize(fyne.NewSize(win.Canvas().Size().Width/2, 0))
 		guiDiaMov.Show()
 	})
 }
 
-func initGUIPath(pGuiPath **widget.Tree, binEditor binding.String, pGuiEditorContent **widget.Entry) {
+func initGUIPath(pGuiPath **widget.Tree, binEditor binding.String, pGuiEditorContent **PCSEntry) {
 	files := getFiles()
 
 	(*pGuiPath) = widget.NewTree(
@@ -419,15 +427,20 @@ func initGUIPath(pGuiPath **widget.Tree, binEditor binding.String, pGuiEditorCon
 		for p := uid; (p != phelp.STR_EMPTY) && (p != phelp.PATH_CURRENT); p = path.Dir(p) {
 			guiPath.OpenBranch(p)
 		}
+
+		plog.InfoF("open file %q done\n", uid)
 	}
 }
 
-func initGuiBodyContent(pGuiEditorContent **widget.Entry, pGuiPreview **widget.RichText, binEditor binding.String, funOnEditorChange func(string)) {
-	*pGuiEditorContent = widget.NewMultiLineEntry()
+func initGuiBodyContent(pGuiEditorContent **PCSEntry, pGuiPreview **widget.RichText, binEditor binding.String, funOnEditorChange func(string), pGuiButSave **widget.Button) {
+	*pGuiEditorContent = newPCSEntry(func() {
+		(*pGuiButSave).OnTapped()
+	})
 	guiEditorContent := *pGuiEditorContent
 	guiEditorContent.Bind(binEditor)
 	guiEditorContent.OnChanged = funOnEditorChange
 	guiEditorContent.Disable()
+	// guiEditorContent.TypedShortcut(&fyne)
 
 	*pGuiPreview = widget.NewRichText()
 }
