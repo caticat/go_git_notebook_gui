@@ -2,14 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"path"
 
 	"github.com/caticat/go_game_server/phelp"
 	"github.com/caticat/go_game_server/plog"
 )
 
 type PNoteBookCfg struct {
-	Repository  string `json:"repository"`  // 仓库地址
-	Local       string `json:"local"`       // 本地地址
+	Repository  string `json:"repository"` // 仓库地址
+	Local       string // 本地地址
 	Username    string `json:"username"`    // 仓库账号,可以为空
 	Password    string `json:"password"`    // 仓库密码/仓库Token
 	AuthorName  string `json:"authorname"`  // 提交用户名
@@ -33,6 +34,9 @@ func (p *PNoteBookCfg) init() error {
 	if err := json.Unmarshal([]byte(strCfg), p); err != nil {
 		return err
 	}
+
+	// 其他配置初始化
+	p.Local = path.Join(app.Storage().RootURI().Path(), APP_CFG_PATH_LOCAL)
 
 	// 设置文件数据
 	files := NewPFyneTreePath(p.Local)

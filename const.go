@@ -12,7 +12,6 @@ const (
 	APP_CFG_VALUE_DEFAULT = `
 {
 	"repository" : "",
-	"local" : "./data",
 	"username" : "",
 	"password" : "",
 	"authorname" : "",
@@ -21,6 +20,7 @@ const (
 	"homelayout" : 7
 }
 `
+	APP_CFG_PATH_LOCAL = "local.repo"
 
 	// gui
 	GUI_WINDOW_INIT_SIZE_W         = 1000                 // 窗口初始大小W

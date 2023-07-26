@@ -25,3 +25,8 @@ a git based notebook gui implement by go
 - 强制拉取
 - 启动时无法连接git时跳转到配置页签
 - 首次打开编辑窗口处理
+
+## 打包
+
+- `fyne package -os windows -icon assets/myapp.png`
+- `fyne package -os android -appID github.com.caticat.go_git_notebook_gui -icon assets/myapp.png`
