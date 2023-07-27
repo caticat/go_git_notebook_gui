@@ -23,6 +23,7 @@ func initGUISetting() fyne.CanvasObject {
 
 func initGUISettingBasic() *widget.Form {
 	conf := getCfg()
+	win := getWin()
 	sliFormItemData := []*struct {
 		K, V       string
 		IsPassword bool
@@ -69,49 +70,85 @@ func initGUISettingBasic() *widget.Form {
 		}
 	}
 	guiForm.OnSubmit = func() {
-		var err error
-
 		index := 0
-		conf.Repository, err = sliFormItemData[index].BinData.Get()
+		repository, err := sliFormItemData[index].BinData.Get()
 		if err != nil {
+			dialog.NewError(err, win).Show()
 			plog.ErrorLn(err)
+			return
+		}
+		needRmLocal := repository != conf.Repository
+
+		funChangeSetting := func() {
+			index++
+			conf.Username, err = sliFormItemData[index].BinData.Get()
+			if err != nil {
+				dialog.NewError(err, win).Show()
+				plog.ErrorLn(err)
+				return
+			}
+
+			index++
+			conf.Password, err = sliFormItemData[index].BinData.Get()
+			if err != nil {
+				dialog.NewError(err, win).Show()
+				plog.ErrorLn(err)
+				return
+			}
+
+			index++
+			conf.AuthorName, err = sliFormItemData[index].BinData.Get()
+			if err != nil {
+				dialog.NewError(err, win).Show()
+				plog.ErrorLn(err)
+				return
+			}
+
+			index++
+			conf.AuthorEMail, err = sliFormItemData[index].BinData.Get()
+			if err != nil {
+				dialog.NewError(err, win).Show()
+				plog.ErrorLn(err)
+				return
+			}
+			conf.Repository = repository // 最后才更新仓库地址
+
+			err = conf.save()
+			if err != nil {
+				dialog.NewError(err, win).Show()
+				plog.ErrorLn(err)
+				return
+			}
+
+			err = changeConfig(needRmLocal)
+			if err != nil {
+				dialog.NewError(err, win).Show()
+				plog.ErrorLn(err)
+				return
+			}
+			getFunRefresh()()
+
+			// dialog.NewInformation("Setting Config", "Update Config Done!", win).Show()
+			plog.InfoLn("update config done")
 		}
 
-		index++
-		conf.Username, err = sliFormItemData[index].BinData.Get()
-		if err != nil {
-			plog.ErrorLn(err)
+		if needRmLocal {
+			guiCon := dialog.NewConfirm("Change Repo", fmt.Sprintf("Change Repo From:%q to %q while delete all local data\nSure?", conf.Repository, repository),
+				func(b bool) {
+					if b {
+						funChangeSetting()
+					} else {
+						err = sliFormItemData[index].BinData.Set(conf.Repository)
+						if err != nil {
+							plog.ErrorLn(err)
+						}
+					}
+				}, win)
+			guiCon.Resize(fyne.NewSize(win.Canvas().Size().Width/2, 0))
+			guiCon.Show()
+		} else {
+			funChangeSetting()
 		}
-
-		index++
-		conf.Password, err = sliFormItemData[index].BinData.Get()
-		if err != nil {
-			plog.ErrorLn(err)
-		}
-
-		index++
-		conf.AuthorName, err = sliFormItemData[index].BinData.Get()
-		if err != nil {
-			plog.ErrorLn(err)
-		}
-
-		index++
-		conf.AuthorEMail, err = sliFormItemData[index].BinData.Get()
-		if err != nil {
-			plog.ErrorLn(err)
-		}
-
-		err = conf.save()
-		if err != nil {
-			plog.ErrorLn(err)
-		}
-
-		err = sync()
-		if err != nil {
-			plog.ErrorLn(err)
-		}
-		dialog.NewInformation("Setting Config", "Update Config Done!", getWin()).Show()
-		plog.InfoLn("update config done")
 	}
 	guiForm.Refresh()
 

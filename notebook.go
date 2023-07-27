@@ -315,3 +315,22 @@ func gitLogs(logNum int) string {
 
 	return ret
 }
+
+func changeConfig(needRmLocal bool) error {
+	// 同步流程
+	conf := getCfg()
+	return fileOperationProgress("change config", conf.Repository, false, func() error {
+		setPGit(nil) // 清空git信息
+
+		if needRmLocal {
+			if err := phelp.Rm(conf.Local); err != nil {
+				plog.ErrorLn(err) // 这里不停止后续处理,因为`getCfg().Local`这个文件夹一定被占用无法删除,但是内部的文件会被删除干净
+			}
+		}
+
+		if err := sync(); err != nil {
+			return err
+		}
+		return nil
+	})
+}
