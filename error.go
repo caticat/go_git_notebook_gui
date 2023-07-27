@@ -13,4 +13,5 @@ var (
 	ErrMoveRootDataDirInHome        = errors.New("can not move root dir by home move button")
 	ErrMoveFileFolderNotFound       = errors.New("file/folder not found while move")
 	ErrMoveFilePathOutOfData        = errors.New("can not move file out of data dir")
+	ErrGitLogNumNeedToBeInt         = errors.New("git log num need to be int")
 )

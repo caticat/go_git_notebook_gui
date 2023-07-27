@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"fyne.io/fyne/v2/data/binding"
@@ -292,4 +293,25 @@ func fileOperationProgress(strOperation, fileName string, autoClose bool, funOpe
 	}
 
 	return nil
+}
+
+func gitLogs(logNum int) string {
+	g := getPGit()
+	if g == nil {
+		plog.ErrorLn(ErrGitNotSync)
+		return ""
+	}
+
+	sliLog, err := g.Log(logNum)
+	if err != nil {
+		plog.ErrorLn(err)
+		return ""
+	}
+
+	ret := ""
+	for _, log := range sliLog {
+		ret += fmt.Sprintf("[%s][%s]%s\n", log.Author.When.Format(GUI_LOG_GIT_TIME_FORMAT), log.Author.String(), strings.TrimSpace(log.Message))
+	}
+
+	return ret
 }

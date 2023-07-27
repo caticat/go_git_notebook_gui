@@ -5,7 +5,7 @@ const (
 	APP_ID       = "github.com.caticat.go_git_notebook_gui"
 	WINDOW_TITLE = "PNoteBook"
 	APP_AUTHOR   = "Pan J"
-	APP_VER      = "v0.0.1"
+	APP_VER      = "v0.0.4"
 	APP_CFG_KEY  = "config"
 
 	// config
@@ -23,15 +23,18 @@ const (
 	APP_CFG_PATH_LOCAL = "local.repo"
 
 	// gui
-	GUI_WINDOW_INIT_SIZE_W         = 1000                 // 窗口初始大小W
-	GUI_WINDOW_INIT_SIZE_H         = 700                  // 窗口初始大小H
-	GUI_HOME_OFFSET                = 0.3                  // 初始主界面分隔比率
-	GUI_DIALOG_AUTOCLOSE_WAIT_TIME = 300                  // 弹窗自动关闭事件 毫秒
-	GUI_HOME_SEARCH_PLACEHOLDER    = "Search Pattern ..." // 主界面搜索提示文字
-	GUI_HOME_TOGGLE_LEFT           = 1 << 0               // 主界面显示标记 目录树
-	GUI_HOME_TOGGLE_MIDDLE         = 1 << 1               // 主界面显示标记 编辑
-	GUI_HOME_TOGGLE_RIGHT          = 1 << 2               // 主界面显示标记 预览
-	GUI_HOME_PATH_LOOP_MAX         = 32                   // 递归打开界面次数上限
+	GUI_WINDOW_INIT_SIZE_W         = 1000                  // 窗口初始大小W
+	GUI_WINDOW_INIT_SIZE_H         = 700                   // 窗口初始大小H
+	GUI_HOME_OFFSET                = 0.3                   // 初始主界面分隔比率
+	GUI_DIALOG_AUTOCLOSE_WAIT_TIME = 300                   // 弹窗自动关闭事件 毫秒
+	GUI_HOME_SEARCH_PLACEHOLDER    = "Search Pattern ..."  // 主界面搜索提示文字
+	GUI_HOME_TOGGLE_LEFT           = 1 << 0                // 主界面显示标记 目录树
+	GUI_HOME_TOGGLE_MIDDLE         = 1 << 1                // 主界面显示标记 编辑
+	GUI_HOME_TOGGLE_RIGHT          = 1 << 2                // 主界面显示标记 预览
+	GUI_HOME_PATH_LOOP_MAX         = 32                    // 递归打开界面次数上限
+	GUI_LOG_GIT_PLACEHOLDER        = "git log -..."        // 日志显示条目数提示文字
+	GUI_LOG_GIT_DEFAULT            = "10"                  // 日志显示条目数 默认
+	GUI_LOG_GIT_TIME_FORMAT        = "2006-01-02 15:04:05" // 日志时间格式
 	GUI_INFO_README                = `# 说明
 
 基础云笔记功能

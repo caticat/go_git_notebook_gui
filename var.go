@@ -1,6 +1,8 @@
 package main
 
 import (
+	"regexp"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
 	"github.com/caticat/go_game_server/pgit"
@@ -18,6 +20,7 @@ var (
 	g_openFileName    string
 	g_openFileContent string
 	g_funRefresh      func()
+	g_regNum          = regexp.MustCompile("[0-9]+")
 )
 
 func getApp() fyne.App                  { return g_app }
@@ -39,3 +42,4 @@ func getOpenFileContent() string        { return g_openFileContent }
 func setOpenFileContent(content string) { g_openFileContent = content }
 func getFunRefresh() func()             { return g_funRefresh }
 func setFunRefresh(fun func())          { g_funRefresh = fun }
+func getRegNum() *regexp.Regexp         { return g_regNum }
