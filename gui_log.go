@@ -30,5 +30,5 @@ func initGUILog() fyne.CanvasObject {
 	guiScrLog := container.NewScroll(widget.NewLabelWithData(getLogData()))
 
 	// 界面组合
-	return container.NewBorder(guiForLogLevel, nil, nil, nil, guiScrLog)
+	return container.NewBorder(guiForLogLevel, nil, nil, nil, container.NewMax(guiScrLog))
 }

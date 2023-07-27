@@ -1,6 +1,16 @@
 # go_git_notebook_gui
 
-a git based notebook gui implement by go
+- a git based notebook gui implement by go
+- 使用golang制作的跨平台云笔记界面
+	- 当前只能存储文字
+	- 图片只能使用连接
+- 支持网站
+	- [GitHub](https://github.com/)
+	- [Gitee](https://gitee.com/)
+- 设置说明
+
+![basic](./assets/setting_basic.png)
+![advance](./assets/setting_advance.png)
 
 ## 待制作
 
@@ -25,8 +35,19 @@ a git based notebook gui implement by go
 - 强制拉取
 - 启动时无法连接git时跳转到配置页签
 - 首次打开编辑窗口处理
+- 图片显示支持
+
+## 注意
+
+- markdown的文件关联只能使用绝对路径,包括图片显示
+	- 相对路径因为程序和文件存储根目录不同的关系导致失效
 
 ## 更新内容
+
+### v0.0.3
+
+- 图片显示支持
+- 文件移动失败问题修正
 
 ### v0.0.2
 

@@ -37,7 +37,12 @@ func onEditorChange(binEntry binding.String, guiButSave *widget.Button, guiPrevi
 	}
 
 	if guiPreview.Visible() {
-		guiPreview.ParseMarkdown(contentNew)
+		if phelp.IsImage([]byte(contentNew)) {
+			plog.DebugLn("![image](" + getOpenFileName() + ")")
+			guiPreview.ParseMarkdown("![image](" + getOpenFileName() + ")")
+		} else {
+			guiPreview.ParseMarkdown(contentNew)
+		}
 	}
 
 	contentOri := getOpenFileContent()

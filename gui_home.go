@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/dialog"
@@ -31,7 +32,9 @@ func initGUIHome(text string, icon fyne.Resource) *container.TabItem {
 		guiButDel          *widget.Button
 		guiButMove         *widget.Button
 		guiPath            *widget.Tree
+		guiEditor          *fyne.Container
 		guiEditorContent   *PCSEntry
+		guiImage           *canvas.Image
 		guiPreview         *widget.RichText
 		guiBody            *fyne.Container
 		binEditor          = binding.NewString()
@@ -73,7 +76,7 @@ func initGUIHome(text string, icon fyne.Resource) *container.TabItem {
 	}
 	setFunRefresh(funOnRefresh)
 	initGUISearch(&guiSearch, &guiPath)
-	initGUIButToggle(&funBodyShow, &guiButToggleLeft, &guiButToggleMiddle, &guiButToggleRight, &guiBody, &guiPath, &guiEditorContent, &guiPreview)
+	initGUIButToggle(&funBodyShow, &guiButToggleLeft, &guiButToggleMiddle, &guiButToggleRight, &guiBody, &guiPath, &guiEditor, &guiPreview)
 	initGUIButRefresh(&guiButRefresh, funOnRefresh)
 	initGUIButSave(&guiButSave, binEditor, &guiPath)
 	initGUIButAdd(&guiButAdd, &guiPath, funOnRefresh)
@@ -81,13 +84,13 @@ func initGUIHome(text string, icon fyne.Resource) *container.TabItem {
 	initGUIButMove(&guiButMove, &guiPath, funOnRefresh)
 	guiHead := container.NewGridWithColumns(2, guiSearch, container.NewHBox(guiButToggleLeft, guiButToggleMiddle, guiButToggleRight, guiButRefresh, guiButSave, guiButAdd, guiButDel, guiButMove))
 
-	initGUIPath(&guiPath, binEditor, &guiEditorContent)
-	initGuiBodyContent(&guiEditorContent, &guiPreview, binEditor, funOnEditorChange, &guiButSave)
+	initGUIPath(&guiPath, binEditor, &guiEditorContent, &guiImage)
+	initGuiBodyContent(&guiEditor, &guiEditorContent, &guiImage, &guiPreview, binEditor, funOnEditorChange, &guiButSave)
 	guiBody = container.NewMax()
 	funBodyShow()
 
 	guiLabLogLast = widget.NewLabelWithData(getLogLast())
-	guiMain := container.NewBorder(guiHead, guiLabLogLast, nil, nil, guiBody)
+	guiMain := container.NewBorder(guiHead, container.NewHScroll(guiLabLogLast), nil, nil, guiBody)
 
 	guiHome := container.NewTabItemWithIcon(text, icon, guiMain)
 
@@ -124,7 +127,7 @@ func initGUIButToggle(pFunBodyShow *func(),
 	pGuiButToggleRight **widget.Button,
 	pGuiBody **fyne.Container,
 	pGuiPath **widget.Tree,
-	pGuiEditorContent **PCSEntry,
+	pGuiEditor **fyne.Container,
 	pGuiPreview **widget.RichText) {
 	conf := getCfg()
 	bodyshow := conf.getHomeLayout()
@@ -161,7 +164,7 @@ func initGUIButToggle(pFunBodyShow *func(),
 		body.RemoveAll()
 		sliWid := make([]fyne.CanvasObject, 0)
 		if bodyshow&GUI_HOME_TOGGLE_MIDDLE > 0 {
-			sliWid = append(sliWid, container.NewScroll(*pGuiEditorContent))
+			sliWid = append(sliWid, container.NewScroll(*pGuiEditor))
 			(*pGuiButToggleMiddle).SetIcon(theme.MoveUpIcon())
 		} else {
 			(*pGuiButToggleMiddle).SetIcon(theme.MoveDownIcon())
@@ -392,7 +395,7 @@ func initGUIButMove(pGuiButMove **widget.Button, pGuiPath **widget.Tree, funRefr
 	})
 }
 
-func initGUIPath(pGuiPath **widget.Tree, binEditor binding.String, pGuiEditorContent **PCSEntry) {
+func initGUIPath(pGuiPath **widget.Tree, binEditor binding.String, pGuiEditorContent **PCSEntry, pGuiImage **canvas.Image) {
 	files := getFiles()
 
 	(*pGuiPath) = widget.NewTree(
@@ -423,6 +426,26 @@ func initGUIPath(pGuiPath **widget.Tree, binEditor binding.String, pGuiEditorCon
 			if (*pGuiEditorContent).Disabled() {
 				(*pGuiEditorContent).Enable()
 			}
+
+			// 编辑界面展示内容变更 文字/图片
+			guiImage := *pGuiImage
+			if phelp.IsImage(sliByte) {
+				guiImage := *pGuiImage
+				guiImage.File = uid
+				if !guiImage.Visible() {
+					guiImage.Show()
+				}
+				if (*pGuiEditorContent).Visible() {
+					(*pGuiEditorContent).Hide()
+				}
+			} else {
+				if guiImage.Visible() {
+					guiImage.Hide()
+				}
+				if !(*pGuiEditorContent).Visible() {
+					(*pGuiEditorContent).Show()
+				}
+			}
 		}
 		loopLimit := GUI_HOME_PATH_LOOP_MAX
 		for p := uid; strings.Contains(p, APP_CFG_PATH_LOCAL) && loopLimit > 0; p = path.Dir(p) {
@@ -433,7 +456,8 @@ func initGUIPath(pGuiPath **widget.Tree, binEditor binding.String, pGuiEditorCon
 	}
 }
 
-func initGuiBodyContent(pGuiEditorContent **PCSEntry, pGuiPreview **widget.RichText, binEditor binding.String, funOnEditorChange func(string), pGuiButSave **widget.Button) {
+func initGuiBodyContent(pGuiEditor **fyne.Container, pGuiEditorContent **PCSEntry, pGuiImage **canvas.Image, pGuiPreview **widget.RichText, binEditor binding.String, funOnEditorChange func(string), pGuiButSave **widget.Button) {
+
 	*pGuiEditorContent = newPCSEntry(func() {
 		(*pGuiButSave).OnTapped()
 	})
@@ -443,7 +467,14 @@ func initGuiBodyContent(pGuiEditorContent **PCSEntry, pGuiPreview **widget.RichT
 	guiEditorContent.Disable()
 	// guiEditorContent.TypedShortcut(&fyne)
 
+	*pGuiImage = &canvas.Image{}
+	guiImage := *pGuiImage
+	guiImage.FillMode = canvas.ImageFillOriginal
+	guiImage.Hide()
+
 	*pGuiPreview = widget.NewRichText()
+
+	*pGuiEditor = container.NewMax(guiEditorContent, guiImage)
 }
 
 // func initGuiBodyPathContent(pGuiEditorPathContent **widget.Entry, pGuiBodyPathContent **container.Split, binEditor binding.String, funOnEditorChange func(string), pGuiPath **widget.Tree) {
