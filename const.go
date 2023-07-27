@@ -5,7 +5,7 @@ const (
 	APP_ID       = "github.com.caticat.go_git_notebook_gui"
 	WINDOW_TITLE = "PNoteBook"
 	APP_AUTHOR   = "Pan J"
-	APP_VER      = "v0.0.4"
+	APP_VER      = "v0.0.5"
 	APP_CFG_KEY  = "config"
 
 	// config
