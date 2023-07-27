@@ -31,6 +31,7 @@ const (
 	GUI_HOME_TOGGLE_LEFT           = 1 << 0               // 主界面显示标记 目录树
 	GUI_HOME_TOGGLE_MIDDLE         = 1 << 1               // 主界面显示标记 编辑
 	GUI_HOME_TOGGLE_RIGHT          = 1 << 2               // 主界面显示标记 预览
+	GUI_HOME_PATH_LOOP_MAX         = 32                   // 递归打开界面次数上限
 	GUI_INFO_README                = `# 说明
 
 基础云笔记功能

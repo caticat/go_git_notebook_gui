@@ -245,20 +245,27 @@ func fileOperationProgress(strOperation, fileName string, autoClose bool, funOpe
 	guiDiaProgress := dialog.NewCustom(fmt.Sprintf("%s %q", strOperation, fileName), strOperation, guiProgress, getWin())
 	go guiDiaProgress.Show()
 
+	// 出错函数处理
+	funOnError := func(err error) {
+		plog.ErrorLn(err)
+		guiDiaProgress.Hide()
+		dialog.NewError(err, getWin()).Show()
+	}
+
 	// 本地提交
 	guiDiaProgress.SetDismissText("commit local")
 	c := getCfg()
 	if c == nil {
-		plog.ErrorLn(ErrConfigNotFound)
+		funOnError(ErrConfigNotFound)
 		return ErrConfigNotFound
 	}
 	g := getPGit()
 	if g == nil {
-		plog.ErrorLn(ErrGitNotSync)
+		funOnError(ErrGitNotSync)
 		return ErrGitNotSync
 	}
 	if err := funOperation(); err != nil {
-		plog.ErrorLn(err)
+		funOnError(err)
 		return err
 	}
 
@@ -267,7 +274,7 @@ func fileOperationProgress(strOperation, fileName string, autoClose bool, funOpe
 
 	// 同步数据
 	if err := sync(); err != nil {
-		plog.ErrorLn(err)
+		funOnError(err)
 		return err
 	}
 

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -423,11 +424,11 @@ func initGUIPath(pGuiPath **widget.Tree, binEditor binding.String, pGuiEditorCon
 				(*pGuiEditorContent).Enable()
 			}
 		}
-
-		for p := uid; (p != phelp.STR_EMPTY) && (p != phelp.PATH_CURRENT); p = path.Dir(p) {
+		loopLimit := GUI_HOME_PATH_LOOP_MAX
+		for p := uid; strings.Contains(p, APP_CFG_PATH_LOCAL) && loopLimit > 0; p = path.Dir(p) {
 			guiPath.OpenBranch(p)
+			loopLimit--
 		}
-
 		plog.InfoF("open file %q done\n", uid)
 	}
 }

@@ -26,7 +26,13 @@ a git based notebook gui implement by go
 - 启动时无法连接git时跳转到配置页签
 - 首次打开编辑窗口处理
 
+## 更新内容
+
+### v0.0.2
+
+- 手机目录树展开死循环问题修正
+
 ## 打包
 
-- `fyne package -os windows -icon assets/myapp.png`
+- `fyne package -os windows -appID github.com.caticat.go_git_notebook_gui -icon assets/myapp.png`
 - `fyne package -os android -appID github.com.caticat.go_git_notebook_gui -icon assets/myapp.png`
