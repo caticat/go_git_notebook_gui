@@ -43,6 +43,12 @@ func initGUISettingBasic() *widget.Form {
 		guiForm.AppendItem(d.GUI)
 	}
 
+	// 本地路径固定显示
+	guiPathLocal := widget.NewEntry()
+	guiPathLocal.SetText(getCfg().Local)
+	guiPathLocal.Disable()
+	guiForm.AppendItem(widget.NewFormItem("localpath", guiPathLocal))
+
 	guiForm.OnCancel = func() {
 		index := 0
 		if err := sliFormItemData[index].BinData.Set(conf.Repository); err != nil {

@@ -21,7 +21,8 @@ func NewPLogWriter() *PLogWriter {
 }
 
 func (t *PLogWriter) Write(b []byte) (int, error) {
-	t.m_cha <- string(b)
+	s := strings.ReplaceAll(string(b), getCfg().Local, ".")
+	t.m_cha <- s
 
 	return len(b), nil
 }

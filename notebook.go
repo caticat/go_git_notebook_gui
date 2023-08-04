@@ -44,9 +44,10 @@ func onEditorChange(binEntry binding.String, guiButSave *widget.Button, guiPrevi
 			guiPreview.ParseMarkdown("![image](" + getOpenFileName() + ")")
 		} else {
 			// 相对路径转化为绝对路径
+			contentParse := contentNew // 将原始数据复制出来,不会改变原始数据
 			pathReplace := getCfg().Local
 			regPathRelative := getRegPathRelative()
-			sliMatch := regPathRelative.FindAllStringSubmatch(contentNew, -1)
+			sliMatch := regPathRelative.FindAllStringSubmatch(contentParse, -1)
 			for _, ls := range sliMatch {
 				if len(ls) != GUI_HOME_REG_PATHRELATIVE_NUM {
 					continue
@@ -55,12 +56,12 @@ func onEditorChange(binEntry binding.String, guiButSave *widget.Button, guiPrevi
 					continue
 				} else {
 					pathNew := ls[GUI_HOME_REG_PATHRELATIVE_PREFIX] + path.Join(pathReplace, ls[GUI_HOME_REG_PATHRELATIVE_BASE])
-					contentNew = strings.ReplaceAll(contentNew, ls[GUI_HOME_REG_PATHRELATIVE_ALL], pathNew)
+					contentParse = strings.ReplaceAll(contentParse, ls[GUI_HOME_REG_PATHRELATIVE_ALL], pathNew)
 				}
 			}
 
 			// 解析markdown
-			guiPreview.ParseMarkdown(contentNew)
+			guiPreview.ParseMarkdown(contentParse)
 		}
 	}
 
