@@ -7,10 +7,14 @@
 - 支持网站
 	- [GitHub](https://github.com/)
 	- [Gitee](https://gitee.com/)
-- 设置说明
+- 界面说明
 
-![basic](./assets/setting_basic.png)
-![advance](./assets/setting_advance.png)
+![home](./assets/home.png)
+![log_app](./assets/log_app.png)
+![log_git](./assets/log_git.png)
+![setting_basic](./assets/setting_basic.png)
+![setting_advance](./assets/setting_advance.png)
+![info](./assets/info.png)
 
 ## 待制作
 
