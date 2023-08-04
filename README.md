@@ -1,6 +1,6 @@
 # go_git_notebook_gui
 
-- a git based notebook gui implement by go
+- a git based notebook gui implement by go with fyne
 - 使用golang制作的跨平台云笔记界面
 	- 当前只能存储文字
 	- 图片只能使用连接
@@ -43,7 +43,18 @@
 - 过多的图片可能会导致仓库过大
 	- 图片太多的情况下建议放在图床
 
+## 已知问题
+
+- markdown预览格式不完善
+	- 列表排序可能有问题
+	- 是gui库
+
 ## 更新内容
+
+### v0.0.8
+
+- 搜索框替换相对路径
+- 说明文档完善
 
 ### v0.0.7
 
