@@ -21,25 +21,27 @@ var (
 	g_openFileContent string
 	g_funRefresh      func()
 	g_regNum          = regexp.MustCompile("[0-9]+")
+	g_regPathRelative = regexp.MustCompile(`(!\[.+?\]\()(.{1})`)
 )
 
-func getApp() fyne.App                  { return g_app }
-func setApp(a fyne.App)                 { g_app = a }
-func getWin() fyne.Window               { return g_win }
-func setWin(w fyne.Window)              { g_win = w }
-func getCfg() *PNoteBookCfg             { return g_cfg }
-func getPGit() *pgit.PGit               { return g_pgit }
-func setPGit(p *pgit.PGit)              { g_pgit = p }
-func getLogData() binding.String        { return g_logData }
-func getLogLast() binding.String        { return g_logLast }
-func getFiles() *PFyneTreePath          { return g_files }
-func setFiles(files *PFyneTreePath)     { g_files = files }
-func getPathSelect() string             { return g_pathSelect }
-func setPathSelect(pathSelect string)   { g_pathSelect = pathSelect }
-func getOpenFileName() string           { return g_openFileName }
-func setOpenFileName(name string)       { g_openFileName = name }
-func getOpenFileContent() string        { return g_openFileContent }
-func setOpenFileContent(content string) { g_openFileContent = content }
-func getFunRefresh() func()             { return g_funRefresh }
-func setFunRefresh(fun func())          { g_funRefresh = fun }
-func getRegNum() *regexp.Regexp         { return g_regNum }
+func getApp() fyne.App                   { return g_app }
+func setApp(a fyne.App)                  { g_app = a }
+func getWin() fyne.Window                { return g_win }
+func setWin(w fyne.Window)               { g_win = w }
+func getCfg() *PNoteBookCfg              { return g_cfg }
+func getPGit() *pgit.PGit                { return g_pgit }
+func setPGit(p *pgit.PGit)               { g_pgit = p }
+func getLogData() binding.String         { return g_logData }
+func getLogLast() binding.String         { return g_logLast }
+func getFiles() *PFyneTreePath           { return g_files }
+func setFiles(files *PFyneTreePath)      { g_files = files }
+func getPathSelect() string              { return g_pathSelect }
+func setPathSelect(pathSelect string)    { g_pathSelect = pathSelect }
+func getOpenFileName() string            { return g_openFileName }
+func setOpenFileName(name string)        { g_openFileName = name }
+func getOpenFileContent() string         { return g_openFileContent }
+func setOpenFileContent(content string)  { g_openFileContent = content }
+func getFunRefresh() func()              { return g_funRefresh }
+func setFunRefresh(fun func())           { g_funRefresh = fun }
+func getRegNum() *regexp.Regexp          { return g_regNum }
+func getRegPathRelative() *regexp.Regexp { return g_regPathRelative }

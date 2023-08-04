@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -42,6 +43,23 @@ func onEditorChange(binEntry binding.String, guiButSave *widget.Button, guiPrevi
 			plog.DebugLn("![image](" + getOpenFileName() + ")")
 			guiPreview.ParseMarkdown("![image](" + getOpenFileName() + ")")
 		} else {
+			// 相对路径转化为绝对路径
+			pathReplace := getCfg().Local
+			regPathRelative := getRegPathRelative()
+			sliMatch := regPathRelative.FindAllStringSubmatch(contentNew, -1)
+			for _, ls := range sliMatch {
+				if len(ls) != GUI_HOME_REG_PATHRELATIVE_NUM {
+					continue
+				}
+				if ls[GUI_HOME_REG_PATHRELATIVE_BASE] == GUI_HOME_REG_PATHRELATIVE_EXCEPTION {
+					continue
+				} else {
+					pathNew := ls[GUI_HOME_REG_PATHRELATIVE_PREFIX] + path.Join(pathReplace, ls[GUI_HOME_REG_PATHRELATIVE_BASE])
+					contentNew = strings.ReplaceAll(contentNew, ls[GUI_HOME_REG_PATHRELATIVE_ALL], pathNew)
+				}
+			}
+
+			// 解析markdown
 			guiPreview.ParseMarkdown(contentNew)
 		}
 	}
