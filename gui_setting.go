@@ -32,7 +32,7 @@ func initGUISettingBasic() *widget.Form {
 	}{
 		{K: "repository", V: conf.Repository},
 		{K: "username", V: conf.Username},
-		{K: "password", V: conf.Password, IsPassword: true},
+		{K: "password/token", V: conf.Password, IsPassword: true},
 		{K: "authorname", V: conf.AuthorName},
 		{K: "authoremail", V: conf.AuthorEMail},
 	}
